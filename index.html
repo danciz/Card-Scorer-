@@ -1,0 +1,1095 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Family Card Scorer Pro</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#1a1035">
+  <link rel="manifest" href="manifest.json">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <style>
+    :root {
+      --bg: #1a1035;
+      --surface: #241848;
+      --surface2: #2e2060;
+      --card-bg: #ffffff;
+      --accent1: #ff6b6b;
+      --accent2: #ffd93d;
+      --accent3: #6bcb77;
+      --accent4: #4d96ff;
+      --accent5: #ff922b;
+      --text: #1a1035;
+      --text-light: #7b6fa0;
+      --radius: 20px;
+      --radius-sm: 12px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: var(--bg);
+      min-height: 100vh;
+      color: var(--text);
+      overflow-x: hidden;
+    }
+
+    /* Starfield background */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse at 20% 20%, #2d1b6940 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 80%, #6b1a4940 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 50%, #1a3d6940 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .app-wrapper {
+      max-width: 500px;
+      margin: 0 auto;
+      padding: 16px 16px 80px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ========= HEADER ========= */
+    .app-header {
+      text-align: center;
+      padding: 24px 0 16px;
+      animation: slideDown 0.5s ease;
+    }
+    .app-header .logo {
+      font-family: 'Fredoka One', cursive;
+      font-size: 2.2rem;
+      background: linear-gradient(135deg, var(--accent2), var(--accent1));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: 1px;
+      line-height: 1.1;
+    }
+    .app-header .tagline {
+      color: #9985c0;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-top: 4px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    /* ========= CARD ========= */
+    .card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-bottom: 16px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.25), 0 2px 8px rgba(0,0,0,0.15);
+      animation: fadeUp 0.4s ease both;
+    }
+    .card-title {
+      font-family: 'Fredoka One', cursive;
+      font-size: 1.4rem;
+      color: var(--text);
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .card-title .icon { font-size: 1.5rem; }
+
+    /* ========= INPUTS ========= */
+    label.field-label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--text-light);
+      margin-bottom: 6px;
+      margin-top: 16px;
+    }
+    input[type="text"],
+    input[type="number"] {
+      width: 100%;
+      padding: 14px 16px;
+      border: 2px solid #e8e0f8;
+      border-radius: var(--radius-sm);
+      font-family: 'Nunito', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text);
+      background: #faf8ff;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      outline: none;
+    }
+    input:focus {
+      border-color: var(--accent4);
+      box-shadow: 0 0 0 3px rgba(77, 150, 255, 0.2);
+      background: white;
+    }
+
+    /* ========= MODE SELECTOR ========= */
+    .mode-selector {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 8px;
+    }
+    .mode-btn {
+      padding: 14px 10px;
+      border-radius: var(--radius-sm);
+      border: 2.5px solid #e8e0f8;
+      background: #faf8ff;
+      font-family: 'Nunito', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 800;
+      color: var(--text-light);
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+    }
+    .mode-btn:hover { border-color: var(--accent4); }
+    .mode-btn.active {
+      border-color: var(--accent4);
+      background: linear-gradient(135deg, #4d96ff22, #4d96ff11);
+      color: var(--accent4);
+      box-shadow: 0 2px 12px rgba(77,150,255,0.2);
+    }
+
+    /* ========= PLAYER INPUTS ========= */
+    .player-input-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+      animation: fadeUp 0.3s ease both;
+    }
+    .player-avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+      font-weight: 800;
+    }
+    .player-input-row input { margin: 0; }
+
+    /* ========= BUTTONS ========= */
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 16px;
+      border-radius: var(--radius-sm);
+      border: none;
+      font-family: 'Nunito', sans-serif;
+      font-size: 1rem;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+      letter-spacing: 0.5px;
+      text-align: center;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent4), #6b48ff);
+      color: white;
+      box-shadow: 0 4px 16px rgba(77,150,255,0.4);
+      margin-top: 20px;
+    }
+    .btn-secondary {
+      background: #f0ebff;
+      color: #6b48ff;
+      margin-top: 10px;
+    }
+    .btn-danger {
+      background: linear-gradient(135deg, #ff6b6b, #ff922b);
+      color: white;
+      box-shadow: 0 4px 16px rgba(255,107,107,0.3);
+      margin-top: 10px;
+    }
+    .btn-success {
+      background: linear-gradient(135deg, var(--accent3), #2ec458);
+      color: white;
+      box-shadow: 0 4px 16px rgba(107,203,119,0.3);
+      margin-top: 10px;
+    }
+    .btn-sm {
+      width: auto;
+      padding: 10px 14px;
+      font-size: 0.85rem;
+      border-radius: 10px;
+    }
+
+    /* ========= GAME HEADER ========= */
+    .game-header {
+      background: linear-gradient(135deg, #6b48ff, var(--accent4));
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      color: white;
+      margin-bottom: 16px;
+      box-shadow: 0 8px 24px rgba(107, 72, 255, 0.4);
+      animation: fadeUp 0.4s ease both;
+    }
+    .game-header h2 {
+      font-family: 'Fredoka One', cursive;
+      font-size: 1.8rem;
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+    .game-meta {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .badge {
+      background: rgba(255,255,255,0.2);
+      backdrop-filter: blur(4px);
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    /* ========= PLAYER CARDS ========= */
+    .players-grid { display: flex; flex-direction: column; gap: 12px; }
+    .player-score-card {
+      background: white;
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+      border-left: 5px solid #e0e0e0;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      transition: all 0.3s ease;
+      animation: fadeUp 0.3s ease both;
+    }
+    .player-score-card.leading {
+      border-left-color: var(--accent2);
+      background: linear-gradient(135deg, #fffde7, white);
+      box-shadow: 0 4px 20px rgba(255,217,61,0.25);
+    }
+    .player-score-card.waiting {
+      opacity: 0.7;
+    }
+    .p-avatar {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      flex-shrink: 0;
+      font-weight: 900;
+      color: white;
+    }
+    .p-info { flex: 1; min-width: 0; }
+    .p-name {
+      font-weight: 800;
+      font-size: 1rem;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .p-rounds {
+      font-size: 0.75rem;
+      color: var(--text-light);
+      margin-top: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .p-total {
+      font-family: 'Fredoka One', cursive;
+      font-size: 1.7rem;
+      color: var(--text);
+      text-align: right;
+      min-width: 52px;
+    }
+    .p-controls {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .score-input {
+      width: 68px !important;
+      padding: 10px 8px !important;
+      font-size: 1.1rem !important;
+      font-weight: 800 !important;
+      text-align: center;
+      border-radius: 10px !important;
+      margin: 0 !important;
+    }
+    .undo-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      border: none;
+      background: #fff0ee;
+      color: var(--accent1);
+      font-size: 1.1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+      flex-shrink: 0;
+      font-weight: 700;
+    }
+    .undo-btn:active { transform: scale(0.9); background: #ffd5cf; }
+    .win-badge {
+      background: linear-gradient(135deg, var(--accent2), var(--accent5));
+      color: white;
+      font-size: 0.7rem;
+      font-weight: 800;
+      padding: 2px 8px;
+      border-radius: 10px;
+    }
+    .waiting-pill {
+      background: #fff3e0;
+      color: var(--accent5);
+      font-size: 0.7rem;
+      font-weight: 800;
+      padding: 2px 8px;
+      border-radius: 10px;
+    }
+
+    /* ========= LEADERBOARD ========= */
+    .leaderboard-card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 16px;
+      animation: fadeUp 0.5s ease both;
+    }
+    .lb-title {
+      font-family: 'Fredoka One', cursive;
+      font-size: 1.2rem;
+      color: white;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .lb-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      margin-bottom: 8px;
+      background: rgba(255,255,255,0.06);
+      color: white;
+      font-weight: 700;
+      transition: all 0.3s ease;
+    }
+    .lb-item:first-child {
+      background: linear-gradient(135deg, rgba(255,217,61,0.25), rgba(255,146,43,0.15));
+      border: 1px solid rgba(255,217,61,0.3);
+    }
+    .lb-rank {
+      font-family: 'Fredoka One', cursive;
+      font-size: 1.2rem;
+      width: 28px;
+      text-align: center;
+    }
+    .lb-name { flex: 1; }
+    .lb-score {
+      font-family: 'Fredoka One', cursive;
+      font-size: 1.3rem;
+      color: var(--accent2);
+    }
+
+    /* ========= HISTORY ========= */
+    .history-card {
+      background: var(--surface2);
+      border-radius: var(--radius);
+      padding: 20px;
+      animation: fadeUp 0.6s ease both;
+    }
+    .history-title {
+      font-family: 'Fredoka One', cursive;
+      font-size: 1.2rem;
+      color: white;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .history-item {
+      background: rgba(255,255,255,0.08);
+      border-radius: 12px;
+      padding: 12px 14px;
+      margin-bottom: 8px;
+      border-left: 4px solid var(--accent4);
+    }
+    .history-item .h-type {
+      font-size: 0.7rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--accent4);
+      margin-bottom: 2px;
+    }
+    .history-item .h-title {
+      color: white;
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+    .history-item .h-summary {
+      color: #9985c0;
+      font-size: 0.8rem;
+      margin-top: 4px;
+    }
+    .no-history {
+      color: #6a5a8a;
+      font-size: 0.9rem;
+      text-align: center;
+      padding: 20px 0;
+    }
+
+    /* ========= WINNER OVERLAY ========= */
+    #winnerOverlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(10, 5, 30, 0.92);
+      backdrop-filter: blur(8px);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 20px;
+    }
+    .winner-modal {
+      background: white;
+      border-radius: 28px;
+      padding: 36px 28px;
+      width: 100%;
+      max-width: 380px;
+      text-align: center;
+      animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    }
+    .winner-emoji { font-size: 5rem; margin-bottom: 8px; animation: bounce 0.6s ease infinite alternate; }
+    .winner-name {
+      font-family: 'Fredoka One', cursive;
+      font-size: 2rem;
+      background: linear-gradient(135deg, var(--accent1), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .winner-score {
+      color: var(--text-light);
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin: 8px 0 24px;
+    }
+    .winner-actions { display: flex; flex-direction: column; gap: 10px; }
+
+    /* ========= RESUME BANNER ========= */
+    #resumeBanner {
+      position: fixed;
+      inset: 0;
+      background: rgba(10, 5, 30, 0.92);
+      backdrop-filter: blur(8px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 1100;
+      padding: 20px;
+    }
+    .resume-modal {
+      background: white;
+      border-radius: 28px;
+      padding: 36px 28px;
+      width: 100%;
+      max-width: 380px;
+      text-align: center;
+      animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    }
+    .resume-title {
+      font-family: 'Fredoka One', cursive;
+      font-size: 1.8rem;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+    .resume-sub {
+      color: var(--text-light);
+      font-size: 0.9rem;
+      font-weight: 600;
+      line-height: 1.5;
+    }
+
+    /* ========= SETUP ACTIONS ========= */
+    .setup-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .setup-actions .btn { margin-top: 0; }
+    .btn-ghost {
+      background: #f0ebff;
+      color: #6b48ff;
+      border: 2px dashed #c4b0ff;
+    }
+    .btn-save {
+      background: linear-gradient(135deg, #cc5de8, #9b4dca);
+      color: white;
+      box-shadow: 0 4px 16px rgba(204,93,232,0.3);
+    }
+
+    /* ========= SAVE TOAST ========= */
+    .save-toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: #1a1035;
+      color: white;
+      font-family: 'Nunito', sans-serif;
+      font-weight: 700;
+      font-size: 0.9rem;
+      padding: 12px 22px;
+      border-radius: 30px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+      border: 1px solid rgba(255,255,255,0.15);
+      transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1), opacity 0.35s;
+      opacity: 0;
+      z-index: 2000;
+      white-space: nowrap;
+    }
+    .save-toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    /* ========= UTILS ========= */
+    .hidden { display: none !important; }
+    .divider { height: 1px; background: #f0ebff; margin: 20px 0; }
+    .action-row { display: flex; gap: 10px; }
+    .action-row .btn { margin-top: 0; }
+
+    /* ========= ANIMATIONS ========= */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes popIn {
+      from { opacity: 0; transform: scale(0.7); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+    @keyframes bounce {
+      from { transform: translateY(0); }
+      to   { transform: translateY(-10px); }
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50%       { transform: scale(1.05); }
+    }
+    .pulse { animation: pulse 1.5s ease infinite; }
+  </style>
+</head>
+<body>
+
+<div class="app-wrapper">
+
+  <!-- HEADER -->
+  <div class="app-header">
+    <div class="logo">🃏 Card Scorer</div>
+    <div class="tagline">Family Game Night</div>
+  </div>
+
+  <!-- ======== SETUP SCREEN ======== -->
+  <div id="setup-screen" class="card">
+    <div class="card-title"><span class="icon">⚙️</span> Game Setup</div>
+
+    <label class="field-label">Game Name</label>
+    <input type="text" id="game-name-input" placeholder="e.g. Rummy Night 🃏">
+
+    <label class="field-label">Winning Condition</label>
+    <div class="mode-selector">
+      <button type="button" id="mode-high" class="mode-btn active" onclick="setMode('high')">⬆️ Highest Wins</button>
+      <button type="button" id="mode-low" class="mode-btn" onclick="setMode('low')">⬇️ Lowest Wins</button>
+    </div>
+
+    <label class="field-label">Target Score (optional)</label>
+    <input type="number" id="target-score-input" placeholder="e.g. 500">
+
+    <label class="field-label">Players</label>
+    <div id="player-inputs-container"></div>
+
+    <div class="setup-actions">
+      <button type="button" class="btn btn-secondary" onclick="addPlayerField()">＋ Add Player</button>
+      <button type="button" class="btn btn-ghost" id="last-players-btn" onclick="useLastPlayers()">👥 Last Players</button>
+    </div>
+    <button type="button" class="btn btn-primary" onclick="startGame()">🎮 Start Game!</button>
+  </div>
+
+  <!-- ======== GAME SCREEN ======== -->
+  <div id="game-screen" class="hidden">
+
+    <div class="game-header">
+      <h2 id="display-game-name">Card Game</h2>
+      <div class="game-meta">
+        <div class="badge" id="display-target"></div>
+        <div class="badge" id="display-mode"></div>
+      </div>
+    </div>
+
+    <div class="players-grid" id="scoreboard-inputs"></div>
+
+    <div class="leaderboard-card">
+      <div class="lb-title">🏆 Leaderboard</div>
+      <div id="leaderboard-list"></div>
+    </div>
+
+    <div class="action-row" style="margin-top:14px;">
+      <button type="button" class="btn btn-danger" style="margin-top:0" onclick="confirmReset()">🔄 Next Round</button>
+      <button type="button" class="btn btn-save" style="margin-top:0" onclick="saveGameState()">💾 Save</button>
+      <button type="button" class="btn btn-success" style="margin-top:0" onclick="saveAndEndGame()">✅ End</button>
+    </div>
+  </div>
+
+  <!-- ======== HISTORY SCREEN ======== -->
+  <div class="history-card" style="margin-top: 16px;">
+    <div class="history-title">📜 Game History</div>
+    <div id="history-list"><div class="no-history">No games yet. Start playing! 🎲</div></div>
+  </div>
+
+</div><!-- /app-wrapper -->
+
+<!-- ======== RESUME BANNER ======== -->
+<div id="resumeBanner" class="hidden">
+  <div class="resume-modal">
+    <div style="font-size:2.5rem; margin-bottom:8px;">💾</div>
+    <div class="resume-title">Resume Game?</div>
+    <div class="resume-sub" id="resumeSubtext"></div>
+    <div class="winner-actions" style="margin-top:20px;">
+      <button type="button" class="btn btn-primary" onclick="resumeSavedGame()">▶️ Resume Game</button>
+      <button type="button" class="btn btn-secondary" onclick="dismissResume()">Start Fresh</button>
+    </div>
+  </div>
+</div>
+
+<!-- ======== WINNER OVERLAY ======== -->
+<div id="winnerOverlay">
+  <div class="winner-modal">
+    <div class="winner-emoji" id="winnerIcon">🏆</div>
+    <div class="winner-name" id="winnerNameDisplay">Winner!</div>
+    <div class="winner-score" id="finalScoreDisplay"></div>
+    <div class="winner-actions">
+      <button type="button" class="btn btn-primary" onclick="triggerResetFromModal()">🎮 Next Round</button>
+      <button type="button" class="btn btn-secondary" onclick="closeWinnerModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  /* =========================================================
+     CONSTANTS
+  ========================================================= */
+  const PLAYER_COLORS = [
+    '#ff6b6b', '#4d96ff', '#6bcb77', '#ffd93d',
+    '#ff922b', '#cc5de8', '#20c997', '#f06595'
+  ];
+  const PLAYER_EMOJIS = ['🦁', '🐯', '🐼', '🦊', '🐸', '🦄', '🐙', '🐨'];
+  const SAVE_KEY = 'cardScorer_savedGame';
+  const HISTORY_KEY = 'gameHistory';
+  const LAST_PLAYERS_KEY = 'cardScorer_lastPlayers';
+
+  /* =========================================================
+     STATE
+  ========================================================= */
+  window.players   = [];
+  window.target    = 0;
+  window.isGameOver = false;
+  window.gameMode  = 'high';
+  window.gameName  = 'Card Game';
+
+  /* =========================================================
+     INIT
+  ========================================================= */
+  window.addEventListener('DOMContentLoaded', () => {
+    loadHistory();
+    showLastPlayersBtn();
+    checkForSavedGame();
+    addPlayerField();
+    addPlayerField();
+  });
+
+  /* =========================================================
+     SETUP
+  ========================================================= */
+  function setMode(mode) {
+    window.gameMode = mode;
+    document.getElementById('mode-high').className = mode === 'high' ? 'mode-btn active' : 'mode-btn';
+    document.getElementById('mode-low').className  = mode === 'low'  ? 'mode-btn active' : 'mode-btn';
+  }
+
+  function addPlayerField(name = '') {
+    const container = document.getElementById('player-inputs-container');
+    const idx   = container.children.length;
+    const color = PLAYER_COLORS[idx % PLAYER_COLORS.length];
+    const emoji = PLAYER_EMOJIS[idx % PLAYER_EMOJIS.length];
+    const row   = document.createElement('div');
+    row.className = 'player-input-row';
+    row.innerHTML = `
+      <div class="player-avatar" style="background:${color}">${emoji}</div>
+      <input type="text" class="p-name-input" placeholder="Player ${idx + 1} Name" value="${name}">
+    `;
+    container.appendChild(row);
+  }
+
+  /* --- Last Players --- */
+  function showLastPlayersBtn() {
+    const last = getLastPlayers();
+    const btn  = document.getElementById('last-players-btn');
+    if (last.length) {
+      btn.style.display = '';
+      btn.title = last.join(', ');
+    } else {
+      btn.style.display = 'none';
+    }
+  }
+
+  function getLastPlayers() {
+    try { return JSON.parse(localStorage.getItem(LAST_PLAYERS_KEY) || '[]'); }
+    catch { return []; }
+  }
+
+  function useLastPlayers() {
+    const names = getLastPlayers();
+    if (!names.length) return;
+    // Clear existing fields and rebuild
+    const container = document.getElementById('player-inputs-container');
+    container.innerHTML = '';
+    names.forEach(n => addPlayerField(n));
+    showToast(`👥 Loaded ${names.length} players from last game`);
+  }
+
+  function saveLastPlayers() {
+    const names = window.players.map(p => p.name);
+    localStorage.setItem(LAST_PLAYERS_KEY, JSON.stringify(names));
+  }
+
+  /* --- Start Game --- */
+  function startGame() {
+    const nameInputs = document.getElementsByClassName('p-name-input');
+    const valid = [];
+    for (let i = 0; i < nameInputs.length; i++) {
+      const val = nameInputs[i].value.trim();
+      if (val) valid.push({
+        name: val, rounds: [], matchesWon: 0,
+        color: PLAYER_COLORS[i % PLAYER_COLORS.length],
+        emoji: PLAYER_EMOJIS[i % PLAYER_EMOJIS.length]
+      });
+    }
+    if (!valid.length) { alert('Add at least one player!'); return; }
+
+    window.players   = valid;
+    window.target    = parseInt(document.getElementById('target-score-input').value) || 0;
+    window.isGameOver = false;
+    window.gameName  = document.getElementById('game-name-input').value || 'Card Game';
+
+    // Clear any stale save when starting fresh
+    localStorage.removeItem(SAVE_KEY);
+
+    saveLastPlayers();
+    showGameScreen();
+  }
+
+  function showGameScreen() {
+    document.getElementById('setup-screen').classList.add('hidden');
+    document.getElementById('game-screen').classList.remove('hidden');
+    document.getElementById('display-game-name').innerText = window.gameName;
+    document.getElementById('display-target').innerText = window.target > 0 ? `🎯 Target: ${window.target}` : '♾️ No Limit';
+    document.getElementById('display-mode').innerText = window.gameMode === 'high' ? '⬆️ High Wins' : '⬇️ Low Wins';
+    renderAll();
+  }
+
+  /* =========================================================
+     SAVE & RESUME
+  ========================================================= */
+  function buildSaveState() {
+    return {
+      gameName:  window.gameName,
+      gameMode:  window.gameMode,
+      target:    window.target,
+      isGameOver: window.isGameOver,
+      players:   window.players,
+      savedAt:   new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    };
+  }
+
+  function saveGameState() {
+    localStorage.setItem(SAVE_KEY, JSON.stringify(buildSaveState()));
+    showToast('💾 Game saved!');
+  }
+
+  function checkForSavedGame() {
+    try {
+      const raw = localStorage.getItem(SAVE_KEY);
+      if (!raw) return;
+      const state = JSON.parse(raw);
+      if (!state || !state.players || !state.players.length) return;
+
+      const names   = state.players.map(p => p.name).join(', ');
+      const scores  = state.players.map(p => p.name + ': ' + p.rounds.reduce((a,b) => a+b, 0)).join(' | ');
+      document.getElementById('resumeSubtext').innerHTML =
+        `<strong>${state.gameName}</strong><br>${names}<br><small style="color:#aaa">Saved at ${state.savedAt || '?'}</small><br><small>${scores}</small>`;
+
+      document.getElementById('resumeBanner').classList.remove('hidden');
+    } catch (e) {
+      localStorage.removeItem(SAVE_KEY);
+    }
+  }
+
+  function resumeSavedGame() {
+    try {
+      const state = JSON.parse(localStorage.getItem(SAVE_KEY));
+      window.players    = state.players;
+      window.gameMode   = state.gameMode   || 'high';
+      window.target     = state.target     || 0;
+      window.isGameOver = state.isGameOver || false;
+      window.gameName   = state.gameName   || 'Card Game';
+
+      // Keep game-name-input in sync (used by logHistory)
+      document.getElementById('game-name-input').value = window.gameName;
+
+      dismissResume();
+      showGameScreen();
+      showToast('▶️ Game resumed!');
+    } catch (e) {
+      dismissResume();
+    }
+  }
+
+  function dismissResume() {
+    document.getElementById('resumeBanner').classList.add('hidden');
+    localStorage.removeItem(SAVE_KEY);
+  }
+
+  /* =========================================================
+     TOAST
+  ========================================================= */
+  function showToast(msg) {
+    let toast = document.getElementById('appToast');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.id = 'appToast';
+      toast.className = 'save-toast';
+      document.body.appendChild(toast);
+    }
+    toast.textContent = msg;
+    toast.classList.add('show');
+    clearTimeout(toast._timer);
+    toast._timer = setTimeout(() => toast.classList.remove('show'), 2400);
+  }
+
+  /* =========================================================
+     SCORING
+  ========================================================= */
+  function getTotal(player) {
+    return player.rounds.reduce((s, r) => s + r, 0);
+  }
+
+  function updateScore(index, val) {
+    if (val === '' || val === null) return;
+    const pts = parseInt(val);
+    if (isNaN(pts)) return;
+    if (navigator.vibrate) navigator.vibrate(40);
+    window.players[index].rounds.push(pts);
+    renderAll();
+    checkRoundComplete();
+  }
+
+  function deleteLastRound(index) {
+    if (window.players[index].rounds.length > 0) {
+      window.players[index].rounds.pop();
+      renderAll();
+    }
+  }
+
+  function checkRoundComplete() {
+    if (window.target <= 0 || window.isGameOver) return;
+    const maxRounds = Math.max(...window.players.map(p => p.rounds.length));
+    const allEqual  = window.players.every(p => p.rounds.length === maxRounds);
+    if (allEqual && maxRounds > 0) {
+      const hit = window.players.some(p => getTotal(p) >= window.target);
+      if (hit) evaluateWinner();
+    }
+  }
+
+  function evaluateWinner() {
+    const sorted = [...window.players].sort((a, b) =>
+      window.gameMode === 'high' ? getTotal(b) - getTotal(a) : getTotal(a) - getTotal(b)
+    );
+    const best    = getTotal(sorted[0]);
+    const winners = window.players.filter(p => getTotal(p) === best);
+    if (winners.length > 1) showTie(winners);
+    else showWin(winners[0]);
+  }
+
+  function showTie(winners) {
+    document.getElementById('winnerIcon').innerText       = '🤝';
+    document.getElementById('winnerNameDisplay').innerText = "It's a Tie!";
+    document.getElementById('finalScoreDisplay').innerText = winners.map(w => w.name).join(' & ') + ' — ' + getTotal(winners[0]) + ' pts';
+    document.getElementById('winnerOverlay').style.display = 'flex';
+  }
+
+  function showWin(player) {
+    window.isGameOver = true;
+    player.matchesWon++;
+    if (navigator.vibrate) navigator.vibrate([100, 50, 200]);
+    document.getElementById('winnerIcon').innerText        = '🏆';
+    document.getElementById('winnerNameDisplay').innerText  = player.name + ' Wins!';
+    document.getElementById('finalScoreDisplay').innerText  = 'Total Score: ' + getTotal(player) + ' pts';
+    document.getElementById('winnerOverlay').style.display  = 'flex';
+    confetti({ particleCount: 200, spread: 90, origin: { y: 0.55 }, colors: [player.color, '#ffd93d', '#ffffff'] });
+  }
+
+  function closeWinnerModal() { document.getElementById('winnerOverlay').style.display = 'none'; }
+
+  function confirmReset() {
+    if (confirm('Log current scores and start a new round?')) performReset(false);
+  }
+
+  function triggerResetFromModal() {
+    closeWinnerModal();
+    performReset(true);
+  }
+
+  function performReset(celebrate) {
+    logHistory('Round');
+    window.isGameOver = false;
+    window.players.forEach(p => p.rounds = []);
+    renderAll();
+    if (celebrate) confetti({ particleCount: 120, spread: 70, origin: { y: 0.7 }, colors: ['#6bcb77', '#4d96ff', '#ffd93d'] });
+  }
+
+  /* =========================================================
+     RENDER
+  ========================================================= */
+  function renderAll() {
+    const maxRounds = Math.max(0, ...window.players.map(p => p.rounds.length));
+
+    let html = '';
+    window.players.forEach((p, i) => {
+      const isLeading = isPlayerLeading(p);
+      const isWaiting = p.rounds.length < maxRounds;
+      html += `
+        <div class="player-score-card ${isLeading ? 'leading' : ''} ${isWaiting ? 'waiting' : ''}">
+          <div class="p-avatar" style="background:${p.color}">${p.emoji}</div>
+          <div class="p-info">
+            <div class="p-name">
+              ${p.name}
+              ${p.matchesWon > 0 ? `<span class="win-badge">🏆 ${p.matchesWon}</span>` : ''}
+              ${isWaiting && maxRounds > 0 ? '<span class="waiting-pill">Waiting…</span>' : ''}
+              ${isLeading && !isWaiting ? '⭐' : ''}
+            </div>
+            <div class="p-rounds">${p.rounds.length ? 'Rounds: ' + p.rounds.join(', ') : 'No scores yet'}</div>
+          </div>
+          <div class="p-total">${getTotal(p)}</div>
+          <div class="p-controls">
+            <input type="number" class="score-input" placeholder="+/-"
+                   onchange="updateScore(${i}, this.value); this.value=''">
+            <button class="undo-btn" onclick="deleteLastRound(${i})" title="Undo last">↺</button>
+          </div>
+        </div>`;
+    });
+    document.getElementById('scoreboard-inputs').innerHTML = html;
+
+    const sorted = [...window.players].sort((a, b) =>
+      window.gameMode === 'high' ? getTotal(b) - getTotal(a) : getTotal(a) - getTotal(b)
+    );
+    const ranks = ['🥇', '🥈', '🥉'];
+    let lbHtml = '';
+    sorted.forEach((p, i) => {
+      lbHtml += `
+        <div class="lb-item">
+          <div class="lb-rank">${ranks[i] || (i + 1)}</div>
+          <div class="p-avatar" style="background:${p.color}; width:32px; height:32px; font-size:0.9rem;">${p.emoji}</div>
+          <div class="lb-name">${p.name}</div>
+          <div class="lb-score">${getTotal(p)}</div>
+        </div>`;
+    });
+    document.getElementById('leaderboard-list').innerHTML = lbHtml;
+  }
+
+  function isPlayerLeading(player) {
+    if (!window.players.some(p => p.rounds.length > 0)) return false;
+    const best = window.gameMode === 'high'
+      ? Math.max(...window.players.map(p => getTotal(p)))
+      : Math.min(...window.players.map(p => getTotal(p)));
+    return getTotal(player) === best;
+  }
+
+  /* =========================================================
+     HISTORY
+  ========================================================= */
+  function logHistory(type) {
+    const history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+    const summary = window.players.map(p => p.name + ': ' + getTotal(p)).join(' | ');
+    history.unshift({
+      type,
+      title: window.gameName,
+      date:  new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      summary
+    });
+    if (history.length > 20) history.pop();
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+    loadHistory();
+  }
+
+  function loadHistory() {
+    const history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+    if (!history.length) {
+      document.getElementById('history-list').innerHTML = '<div class="no-history">No games yet. Start playing! 🎲</div>';
+      return;
+    }
+    document.getElementById('history-list').innerHTML = history.map(g => `
+      <div class="history-item">
+        <div class="h-type">${g.type} · ${g.date}</div>
+        <div class="h-title">${g.title}</div>
+        <div class="h-summary">${g.summary}</div>
+      </div>`).join('');
+  }
+
+  function saveAndEndGame() {
+    localStorage.removeItem(SAVE_KEY);
+    logHistory('Final');
+    location.reload();
+  }
+
+  // PWA
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js').catch(e => console.log('SW failed:', e));
+    });
+  }
+</script>
+</body>
+</html>
